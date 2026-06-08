@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/constants/constants.dart';
+import 'firebase_options.dart';
 import 'repositories/customer_repository.dart';
 import 'providers/theme_cubit.dart';
 import 'providers/auth_cubit.dart';
@@ -19,7 +20,8 @@ void main() async {
   bool isFirebaseConnected = false;
 
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(    options: DefaultFirebaseOptions.currentPlatform,
+    );
     customerRepository = FirestoreCustomerRepository();
     isFirebaseConnected = true;
   } catch (e) {
