@@ -39,6 +39,15 @@ lib/
 
 ## 🛠️ Setup & Execution
 
+
+### Clone Repository
+
+```bash
+git clone https://github.com/anjali2410107/Customer_Management_App.git
+cd Customer_Management_App
+```
+
+
 ### **1. Prerequisites**
 - Flutter SDK (v3.11.0+)
 - Android Studio / VS Code
@@ -118,6 +127,9 @@ Firebase Test Phone Authentication has been configured using Firebase Test Numbe
 ## APK Download
 
 APK file is included in the submission package.
+
+
+
 
 ## Screenshots
 
