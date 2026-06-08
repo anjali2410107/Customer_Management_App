@@ -20,7 +20,6 @@ class CustomerModel {
     required this.createdAt,
   });
 
-  // Create a copy of the model with some fields modified
   CustomerModel copyWith({
     String? id,
     String? name,
@@ -41,8 +40,6 @@ class CustomerModel {
     );
   }
 
-  // Convert to Map for Firestore.
-  // Note: Firestore uses Timestamp for dates, so we convert DateTime to Timestamp.
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -54,9 +51,7 @@ class CustomerModel {
     };
   }
 
-  // Create from Firestore document snapshot map
   factory CustomerModel.fromMap(Map<String, dynamic> map, String docId) {
-    // Safely parse Firestore Timestamp or falling back to iso string representation
     DateTime parsedDate;
     final rawDate = map['createdAt'];
     if (rawDate is Timestamp) {
@@ -78,7 +73,6 @@ class CustomerModel {
     );
   }
 
-  // Convert to JSON map for Local SharedPreferences Storage
   Map<String, dynamic> toJsonMap() {
     return {
       'id': id,
@@ -91,7 +85,6 @@ class CustomerModel {
     };
   }
 
-  // Parse from SharedPreferences JSON map
   factory CustomerModel.fromJsonMap(Map<String, dynamic> map) {
     return CustomerModel(
       id: map['id'] ?? '',
@@ -104,7 +97,6 @@ class CustomerModel {
     );
   }
 
-  // String serialization/deserialization helpers
   String toJson() => json.encode(toJsonMap());
   factory CustomerModel.fromJson(String source) => CustomerModel.fromJsonMap(json.decode(source));
 }

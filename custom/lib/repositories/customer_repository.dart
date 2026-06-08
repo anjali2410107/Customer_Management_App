@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/customer_model.dart';
 
-// Abstract contract for customer operations
 abstract class CustomerRepository {
   Stream<List<CustomerModel>> getCustomersStream();
   Future<void> addCustomer(CustomerModel customer);
@@ -12,9 +11,7 @@ abstract class CustomerRepository {
   Future<void> deleteCustomer(String id);
 }
 
-// ----------------------------------------------------
-// FIRESTORE IMPLEMENTATION
-// ----------------------------------------------------
+
 class FirestoreCustomerRepository implements CustomerRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -23,7 +20,6 @@ class FirestoreCustomerRepository implements CustomerRepository {
 
   @override
   Stream<List<CustomerModel>> getCustomersStream() {
-    // Listen to firestore snapshots ordered by creation date (newest first)
     return _collection
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -36,26 +32,21 @@ class FirestoreCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> addCustomer(CustomerModel customer) async {
-    // Add customer to Firestore collection. Firestore auto-generates the document ID.
     await _collection.add(customer.toMap());
   }
 
   @override
   Future<void> updateCustomer(CustomerModel customer) async {
-    // Update the customer record in Firestore referencing its document ID
     await _collection.doc(customer.id).update(customer.toMap());
   }
 
   @override
   Future<void> deleteCustomer(String id) async {
-    // Delete the customer record from Firestore using its document ID
     await _collection.doc(id).delete();
   }
 }
 
-// ----------------------------------------------------
-// LOCAL FALLBACK IMPLEMENTATION (SharedPreferences)
-// ----------------------------------------------------
+
 class LocalCustomerRepository implements CustomerRepository {
   static const String _localPrefsKey = 'local_customers_list';
   final StreamController<List<CustomerModel>> _streamController =
@@ -66,7 +57,6 @@ class LocalCustomerRepository implements CustomerRepository {
     _initLocalData();
   }
 
-  // Load saved customers from SharedPreferences on startup
   Future<void> _initLocalData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -75,7 +65,6 @@ class LocalCustomerRepository implements CustomerRepository {
         _cachedCustomers = listJson
             .map((jsonStr) => CustomerModel.fromJson(jsonStr))
             .toList();
-        // Sort by createdAt descending
         _cachedCustomers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       }
       _streamController.add(List.unmodifiable(_cachedCustomers));
@@ -84,7 +73,6 @@ class LocalCustomerRepository implements CustomerRepository {
     }
   }
 
-  // Persist updated list to SharedPreferences
   Future<void> _saveLocalData() async {
     final prefs = await SharedPreferences.getInstance();
     final listJson = _cachedCustomers.map((cust) => cust.toJson()).toList();
@@ -94,7 +82,6 @@ class LocalCustomerRepository implements CustomerRepository {
 
   @override
   Stream<List<CustomerModel>> getCustomersStream() {
-    // Immediately emit current cache, then follow updates
     Timer.run(() {
       _streamController.add(List.unmodifiable(_cachedCustomers));
     });
@@ -103,11 +90,10 @@ class LocalCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> addCustomer(CustomerModel customer) async {
-    // For local, generate a unique ID using timestamp + name hash
     final newId = 'local_${DateTime.now().millisecondsSinceEpoch}_${customer.name.hashCode}';
     final customerWithId = customer.copyWith(id: newId);
     
-    _cachedCustomers.insert(0, customerWithId); // Insert at start
+    _cachedCustomers.insert(0, customerWithId);
     await _saveLocalData();
   }
 

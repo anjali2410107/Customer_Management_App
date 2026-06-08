@@ -2,7 +2,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/constants.dart';
 
-// Authentication States
 abstract class AuthState {
   const AuthState();
 }
@@ -26,13 +25,11 @@ class AuthFailure extends AuthState {
   AuthFailure(this.errorMessage);
 }
 
-// AuthCubit manages authentication actions and session state
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit() : super(AuthInitial()) {
     checkLoginStatus();
   }
 
-  // Check SharedPreferences if the session is active
   Future<void> checkLoginStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -49,7 +46,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Trigger Send OTP - Validation is done locally
   Future<void> sendOtp(String mobile) async {
     emit(AuthLoading());
     // Simulate network latency for a polished user experience
@@ -63,10 +59,8 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthCodeSent(mobile.trim()));
   }
 
-  // Verify OTP - Validate locally against demo OTP
   Future<void> verifyOtp(String mobile, String otp) async {
     emit(AuthLoading());
-    // Simulate verification delay
     await Future.delayed(const Duration(milliseconds: 800));
 
     if (otp.trim() != AppConstants.demoOtp) {
@@ -85,7 +79,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Clear Session and Log Out
   Future<void> logout() async {
     emit(AuthLoading());
     try {
