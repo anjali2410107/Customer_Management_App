@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/constants.dart';
 
-// Authentication States
 abstract class AuthState {
   const AuthState();
 }
@@ -36,17 +35,14 @@ class AuthCubit extends Cubit<AuthState> {
     checkLoginStatus();
   }
 
-  // Check SharedPreferences and Firebase Auth to see if the session is active
   Future<void> checkLoginStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isLoggedIn = prefs.getBool(AppConstants.keyIsLoggedIn) ?? false;
       final savedMobile = prefs.getString(AppConstants.keyLoggedInMobile);
 
-      // Check both Firebase current user and SharedPreferences session states
       if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
         final phone = _auth.currentUser!.phoneNumber ?? savedMobile ?? '';
-        // Standardize displaying phone number (removing country code for simpler view)
         final formattedPhone = phone.replaceAll('+91', '').trim();
         emit(AuthSuccess(formattedPhone.isNotEmpty ? formattedPhone : 'Firebase User'));
       } else if (isLoggedIn && savedMobile != null) {
@@ -59,13 +55,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Trigger Phone Verification - sends real SMS or bypasses for demo credentials
   Future<void> sendOtp(String mobile) async {
     emit(AuthLoading());
 
-    // 1. Local Fallback Mode Check (If Firebase configuration is missing)
     if (Firebase.apps.isEmpty) {
-      await Future.delayed(const Duration(milliseconds: 800)); // Simulate delay
+      await Future.delayed(const Duration(milliseconds: 800));
       if (mobile.trim() != AppConstants.demoMobile) {
         emit(AuthFailure('App running in offline mode. Please use demo number: ${AppConstants.demoMobile}'));
         return;
@@ -74,20 +68,17 @@ class AuthCubit extends Cubit<AuthState> {
       return;
     }
 
-    // 2. Demo bypass (bypass real SMS gateway for developer/review testing)
     if (mobile.trim() == AppConstants.demoMobile) {
       await Future.delayed(const Duration(milliseconds: 800));
       emit(AuthCodeSent(mobile.trim()));
       return;
     }
 
-    // 3. Real Firebase Phone Auth SMS sequence
     try {
       final formattedPhone = '+91$mobile';
       await _auth.verifyPhoneNumber(
         phoneNumber: formattedPhone,
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Automatic SMS code interception (Android only)
           await _auth.signInWithCredential(credential);
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool(AppConstants.keyIsLoggedIn, true);
@@ -111,11 +102,9 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Verify OTP - Validate locally against demo OTP or submit to Firebase
   Future<void> verifyOtp(String mobile, String otp) async {
     emit(AuthLoading());
 
-    // 1. Local Fallback Mode Check (Firebase offline)
     if (Firebase.apps.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 800));
       if (otp.trim() != AppConstants.demoOtp) {
@@ -126,14 +115,12 @@ class AuthCubit extends Cubit<AuthState> {
       return;
     }
 
-    // 2. Demo credential verification bypass
     if (mobile.trim() == AppConstants.demoMobile && otp.trim() == AppConstants.demoOtp) {
       await Future.delayed(const Duration(milliseconds: 800));
       await _saveLocalSession(mobile);
       return;
     }
 
-    // 3. Real Firebase SMS OTP credential verification
     if (_verificationId == null) {
       emit(AuthFailure('Session expired. Please request a new OTP code.'));
       return;
@@ -154,7 +141,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Utility to write user details to SharedPreferences on successful authentication
   Future<void> _saveLocalSession(String mobile) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -166,7 +152,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Clear Session, Sign Out from Firebase and SharedPreferences
   Future<void> logout() async {
     emit(AuthLoading());
     try {
