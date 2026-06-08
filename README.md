@@ -134,14 +134,16 @@ APK file is included in the submission package.
 ## Screenshots
 
 ### Login Screen
-![img.png](img.png)
+<img width="717" height="1600" alt="image" src="https://github.com/user-attachments/assets/48e4e965-ff07-4d0f-b1a4-92be53d8b607" />
 
 ### Dashboard
-![img_1.png](img_1.png)
+<img width="717" height="1600" alt="image" src="https://github.com/user-attachments/assets/c41309f5-d592-4514-b54b-60c99ab27a63" />
+
 ### Customer List
-![img_2.png](img_2.png)
+<img width="1080" height="2408" alt="image" src="https://github.com/user-attachments/assets/30d369d4-b706-4609-80b8-824f8c4da4a6" />
+
 ### Add Customer
-![img_3.png](img_3.png)
+<img width="1080" height="2408" alt="image" src="https://github.com/user-attachments/assets/8639a6c8-7a28-4562-b603-9f48b72e21b8" />
 
 ## Author
 
