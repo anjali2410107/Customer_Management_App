@@ -6,16 +6,35 @@ import '../../providers/customer_cubit.dart';
 import 'edit_customer_screen.dart';
 class CustomerDetailScreen extends StatefulWidget {
   final CustomerModel customer;
-  const CustomerDetailScreen({super.key, required this.customer});
+  final bool isEmbedded;
+  final VoidCallback? onDeleted;
+
+  const CustomerDetailScreen({
+    super.key,
+    required this.customer,
+    this.isEmbedded = false,
+    this.onDeleted,
+  });
+
   @override
   State<CustomerDetailScreen> createState() => _CustomerDetailScreenState();
 }
+
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late CustomerModel _currentCustomer;
+
   @override
   void initState() {
     super.initState();
     _currentCustomer = widget.customer;
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomerDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.customer.id != oldWidget.customer.id || widget.customer != oldWidget.customer) {
+      _currentCustomer = widget.customer;
+    }
   }
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -57,7 +76,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.pop(context);
+        if (widget.isEmbedded) {
+          widget.onDeleted?.call();
+        } else {
+          Navigator.pop(context);
+        }
       }
     }
   }
@@ -90,6 +113,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Customer Profile'),
+        automaticallyImplyLeading: !widget.isEmbedded,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_rounded),

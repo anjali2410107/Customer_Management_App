@@ -44,6 +44,19 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           ),
         );
         Navigator.pop(context);
+      } else if (mounted) {
+        final state = context.read<CustomerCubit>().state;
+        String errorMsg = 'Failed to add customer. Please check your connection.';
+        if (state is CustomerError) {
+          errorMsg = state.errorMessage;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }

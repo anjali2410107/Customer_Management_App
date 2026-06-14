@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/customer_model.dart';
+import 'customer_api_service.dart';
 
 abstract class CustomerRepository {
   Stream<List<CustomerModel>> getCustomersStream();
@@ -109,5 +110,73 @@ class LocalCustomerRepository implements CustomerRepository {
   Future<void> deleteCustomer(String id) async {
     _cachedCustomers.removeWhere((c) => c.id == id);
     await _saveLocalData();
+  }
+}
+
+class RestCustomerRepository implements CustomerRepository {
+  final CustomerApiService _apiService;
+  final StreamController<List<CustomerModel>> _streamController =
+      StreamController<List<CustomerModel>>.broadcast();
+
+  RestCustomerRepository(this._apiService) {
+    _fetchAndEmit();
+  }
+
+  Future<void> _fetchAndEmit() async {
+    try {
+      final customers = await _apiService.fetchCustomers();
+      final customerModels = customers.map((c) {
+        return CustomerModel(
+          id: c.id ?? '',
+          name: c.name,
+          mobile: c.mobile,
+          email: c.email ?? '',
+          companyName: c.company ?? '',
+          address: c.address ?? '',
+          createdAt: c.createdAt ?? DateTime.now(),
+        );
+      }).toList();
+      _streamController.add(customerModels);
+    } catch (e) {
+      _streamController.addError(e);
+    }
+  }
+
+  @override
+  Stream<List<CustomerModel>> getCustomersStream() {
+    _fetchAndEmit();
+    return _streamController.stream;
+  }
+
+  @override
+  Future<void> addCustomer(CustomerModel customer) async {
+    final restCust = Customer(
+      name: customer.name,
+      mobile: customer.mobile,
+      email: customer.email.isNotEmpty ? customer.email : null,
+      company: customer.companyName.isNotEmpty ? customer.companyName : null,
+      address: customer.address.isNotEmpty ? customer.address : null,
+    );
+    await _apiService.createCustomer(restCust);
+    await _fetchAndEmit();
+  }
+
+  @override
+  Future<void> updateCustomer(CustomerModel customer) async {
+    final restCust = Customer(
+      name: customer.name,
+      mobile: customer.mobile,
+      email: customer.email.isNotEmpty ? customer.email : null,
+      company: customer.companyName.isNotEmpty ? customer.companyName : null,
+      address: customer.address.isNotEmpty ? customer.address : null,
+    );
+    await _apiService.updateCustomer(customer.id, restCust);
+    await _fetchAndEmit();
+  }
+
+  @override
+  Future<void> deleteCustomer(String id) async {
+    await _apiService.deleteCustomer(id);
+    await _fetchAndEmit();
   }
 }

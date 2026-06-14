@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/constants.dart';
 import 'firebase_options.dart';
 import 'repositories/customer_repository.dart';
+import 'repositories/customer_api_service.dart';
 import 'providers/theme_cubit.dart';
 import 'providers/auth_cubit.dart';
 import 'providers/customer_cubit.dart';
@@ -20,17 +21,21 @@ void main() async {
   bool isFirebaseConnected = false;
 
   try {
-    await Firebase.initializeApp(    options: DefaultFirebaseOptions.currentPlatform,
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     );
-    customerRepository = FirestoreCustomerRepository();
     isFirebaseConnected = true;
   } catch (e) {
     debugPrint('------------------------------------------------------------');
     debugPrint('Firebase Core failed to load: $e');
-    debugPrint('Defaulting to local SharedPreferences database for testing.');
+    debugPrint('Authentication services may be unavailable.');
     debugPrint('------------------------------------------------------------');
-    customerRepository = LocalCustomerRepository();
   }
+
+  // Always use the RestCustomerRepository for Customer data
+  customerRepository = RestCustomerRepository(
+    CustomerApiService(baseUrl: 'http://10.252.64.131:3000/api/customers'),
+  );
 
   final prefs = await SharedPreferences.getInstance();
   final isLoggedIn = prefs.getBool(AppConstants.keyIsLoggedIn) ?? false;

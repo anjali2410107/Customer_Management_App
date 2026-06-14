@@ -17,6 +17,114 @@ class DashboardScreen extends StatelessWidget {
     if (authState is AuthSuccess) {
       userMobile = authState.mobile;
     }
+
+    final width = MediaQuery.of(context).size.width;
+    final isWide = width > 600;
+
+    // 1. Welcome Banner Widget
+    final welcomeBanner = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [theme.colorScheme.primary.withOpacity(0.15), theme.colorScheme.secondary.withOpacity(0.05)]
+              : [theme.colorScheme.primary.withOpacity(0.08), theme.colorScheme.primary.withOpacity(0.02)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: theme.colorScheme.primary,
+            child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Welcome Back!',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '+91 $userMobile',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // 2. Total Customers Card Widget
+    final totalCustomersCard = BlocBuilder<CustomerCubit, CustomerState>(
+      builder: (context, state) {
+        int count = 0;
+        bool isLoading = state is CustomerLoading;
+        if (state is CustomerLoaded) {
+          count = state.allCustomers.length;
+        }
+        return Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Total Customers',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            '$count',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                  ],
+                ),
+                Icon(
+                  Icons.people_alt_rounded,
+                  size: 44,
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -45,175 +153,181 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [theme.colorScheme.primary.withOpacity(0.15), theme.colorScheme.secondary.withOpacity(0.05)]
-                        : [theme.colorScheme.primary.withOpacity(0.08), theme.colorScheme.primary.withOpacity(0.02)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: theme.colorScheme.primary,
-                      child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (isWide)
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            'Welcome Back!',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                          Expanded(child: welcomeBanner),
+                          const SizedBox(width: 24),
+                          Expanded(child: totalCustomersCard),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    welcomeBanner,
+                    const SizedBox(height: 24),
+                    totalCustomersCard,
+                  ],
+                  const SizedBox(height: 32),
+                  Text(
+                    'Quick Actions',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (isWide)
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.person_add_rounded,
+                              title: 'Add Customer',
+                              subtitle: 'Create new record',
+                              color: Colors.green,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const AddCustomerScreen()),
+                                );
+                              },
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '+91 $userMobile',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.contact_phone_rounded,
+                              title: 'View Customers',
+                              subtitle: 'Browse directory',
+                              color: theme.colorScheme.primary,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const CustomerListScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.account_box_rounded,
+                              title: 'My Profile',
+                              subtitle: 'Account details',
+                              color: Colors.amber.shade700,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.settings_rounded,
+                              title: 'Preferences',
+                              subtitle: 'Theme & settings',
+                              color: Colors.purple,
+                              onTap: () => context.read<ThemeCubit>().toggleTheme(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.person_add_rounded,
+                              title: 'Add Customer',
+                              subtitle: 'Create new record',
+                              color: Colors.green,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const AddCustomerScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.contact_phone_rounded,
+                              title: 'View Customers',
+                              subtitle: 'Browse directory',
+                              color: theme.colorScheme.primary,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const CustomerListScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.account_box_rounded,
+                              title: 'My Profile',
+                              subtitle: 'Account details',
+                              color: Colors.amber.shade700,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildActionCard(
+                              context: context,
+                              icon: Icons.settings_rounded,
+                              title: 'Preferences',
+                              subtitle: 'Theme & settings',
+                              color: Colors.purple,
+                              onTap: () => context.read<ThemeCubit>().toggleTheme(),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              BlocBuilder<CustomerCubit, CustomerState>(
-                builder: (context, state) {
-                  int count = 0;
-                  bool isLoading = state is CustomerLoading;
-                  if (state is CustomerLoaded) {
-                    count = state.allCustomers.length;
-                  }
-                  return Card(
-                    elevation: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Total Customers',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              isLoading
-                                  ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                                  : Text(
-                                '$count',
-                                style: theme.textTheme.displaySmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Icon(
-                            Icons.people_alt_rounded,
-                            size: 48,
-                            color: theme.colorScheme.primary.withOpacity(0.2),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Quick Actions',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.15,
-                children: [
-                  _buildActionCard(
-                    context: context,
-                    icon: Icons.person_add_rounded,
-                    title: 'Add Customer',
-                    subtitle: 'Create new record',
-                    color: Colors.green,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AddCustomerScreen()),
-                      );
-                    },
-                  ),
-                  _buildActionCard(
-                    context: context,
-                    icon: Icons.contact_phone_rounded,
-                    title: 'View Customers',
-                    subtitle: 'Browse directory',
-                    color: theme.colorScheme.primary,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CustomerListScreen()),
-                      );
-                    },
-                  ),
-                  _buildActionCard(
-                    context: context,
-                    icon: Icons.account_box_rounded,
-                    title: 'My Profile',
-                    subtitle: 'Account details',
-                    color: Colors.amber.shade700,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                      );
-                    },
-                  ),
-                  _buildActionCard(
-                    context: context,
-                    icon: Icons.settings_rounded,
-                    title: 'Preferences',
-                    subtitle: 'Theme & settings',
-                    color: Colors.purple,
-                    onTap: () => context.read<ThemeCubit>().toggleTheme(),
-                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

@@ -55,6 +55,19 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
           ),
         );
         Navigator.pop(context, updatedCustomer);
+      } else if (mounted) {
+        final state = context.read<CustomerCubit>().state;
+        String errorMsg = 'Failed to update customer. Please check your connection.';
+        if (state is CustomerError) {
+          errorMsg = state.errorMessage;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
