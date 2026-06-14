@@ -32,7 +32,6 @@ void main() async {
     debugPrint('------------------------------------------------------------');
   }
 
-  // Always use the RestCustomerRepository for Customer data
   customerRepository = RestCustomerRepository(
     CustomerApiService(baseUrl: 'http://10.252.64.131:3000/api/customers'),
   );

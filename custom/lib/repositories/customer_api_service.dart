@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// A Dart model class representing a Customer in the REST backend.
 class Customer {
   final String? id;
   final String name;
@@ -23,7 +22,6 @@ class Customer {
     this.updatedAt,
   });
 
-  /// Factory method to construct a Customer object from JSON map.
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
       id: json['_id'] ?? json['id'],
@@ -37,7 +35,6 @@ class Customer {
     );
   }
 
-  /// Convert Customer object to JSON map for request bodies.
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
@@ -50,14 +47,11 @@ class Customer {
   }
 }
 
-/// An API service to integrate the Flutter frontend with the Next.js REST API.
 class CustomerApiService {
-  /// The base URL of the Next.js API.
   final String baseUrl;
 
   CustomerApiService({required this.baseUrl});
 
-  /// 1. Fetch all customers (GET /api/customers)
   Future<List<Customer>> fetchCustomers() async {
     try {
       final response = await http.get(
@@ -81,7 +75,6 @@ class CustomerApiService {
     }
   }
 
-  /// 2. Fetch a single customer by ID (GET /api/customers/[id])
   Future<Customer> fetchCustomerById(String id) async {
     try {
       final response = await http.get(
@@ -104,7 +97,6 @@ class CustomerApiService {
     }
   }
 
-  /// 3. Create a new customer (POST /api/customers)
   Future<Customer> createCustomer(Customer customer) async {
     try {
       final response = await http.post(
@@ -132,7 +124,6 @@ class CustomerApiService {
     }
   }
 
-  /// 4. Update an existing customer (PUT /api/customers/[id])
   Future<Customer> updateCustomer(String id, Customer customer) async {
     try {
       final response = await http.put(
@@ -160,7 +151,6 @@ class CustomerApiService {
     }
   }
 
-  /// 5. Delete a customer (DELETE /api/customers/[id])
   Future<void> deleteCustomer(String id) async {
     try {
       final response = await http.delete(

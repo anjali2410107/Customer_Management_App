@@ -1,135 +1,109 @@
-# Customer Management App
+# Customer Management App (Frontend)
 
-A Flutter application built for the Flutter & Firebase Developer Internship Assignment at Get Your Businesses Live (GYBL).
+A responsive Flutter application built for managing customer profiles, integrated with a **Next.js 16 + MongoDB Atlas REST API** backend for data persistence and **Firebase Phone Authentication** for login.
+
 ---
 
-## 🚀 Tech Stack
-- **Framework**: Flutter
+## 🚀 Tech Stack & Core Libraries
+
+- **Framework**: Flutter (Material 3 UI, custom light/dark themes)
 - **State Management**: BLoC / Cubits (`flutter_bloc`)
-- **Database**: Firebase Firestore (`cloud_firestore`)
-- **Authentication**: Firebase Phone Auth / Demo OTP
-- **Theme & State Cache**: SharedPreferences
-- **Design System**: Material 3 (Custom Light & Dark Mode)
+- **API Backend**: Next.js 16 REST API
+- **Database**: MongoDB Atlas via Mongoose
+- **Authentication**: Firebase Phone Auth (with graceful offline fallback)
+- **Networking**: `http` package for REST API communication
+- **State Caching**: SharedPreferences
 
 ---
 
 ## 📦 Project Structure
 
-The project follows a clean, feature-driven structure:
+The project uses a clean, repository-based architecture to decouple the UI from the database implementation:
 
 ```
 lib/
  ├── core/
  │    ├── constants/      # App Constants & Demo credentials
- │    ├── theme/          # Material 3 Color Schemes & Field styling
+ │    ├── theme/          # Material 3 Color Schemes & field styling
  │    └── utils/          # Formatting helpers
  │
- ├── models/              # Customer data models & JSON/Map encoders
- ├── repositories/        # Database contracts (Firestore & SharedPreferences fallbacks)
+ ├── models/              # Customer data models & JSON/Map serialization
+ ├── repositories/        # Repository pattern interfaces
+ │    ├── customer_api_service.dart  # REST API Service wrapper
+ │    └── customer_repository.dart   # Implementation (RestCustomerRepository, LocalCustomerRepository, FirestoreCustomerRepository)
  ├── providers/           # BLoC Cubits (Theme, Authentication, Customers)
  ├── screens/             # UI Presentation Layer
- │    ├── auth/           # Login & Pin Input verification screens
+ │    ├── auth/           # Login & PIN verification screens
  │    ├── dashboard/      # Stat counters & Action grids
  │    ├── customer/       # Customer Directory, Add, Detail, & Edit forms
  │    └── profile/        # Admin settings, theme toggle, and sign out
- └── main.dart            # Bootstrap, provider injection, and routing
+ └── main.dart            # Bootstrap, REST repository injection, and routing
 ```
 
 ---
 
 ## 🛠️ Setup & Execution
 
-
-### Clone Repository
-
-```bash
-git clone https://github.com/anjali2410107/Customer_Management_App.git
-cd Customer_Management_App
-```
-
-
-### **1. Prerequisites**
+### 1. Prerequisites
 - Flutter SDK (v3.11.0+)
 - Android Studio / VS Code
+- Next.js Backend running on the local network (see the Backend repository setup instructions)
 
-### **2. Dependencies Installation**
-In the root directory, fetch the required packages:
+### 2. Configure Backend Integration
+Before running the application, make sure the frontend points to the computer running the Next.js backend:
+1. Find your backend computer's local IPv4 address (e.g., `10.252.64.131` on Windows via `ipconfig`, or macOS/Linux via `ifconfig`).
+2. Open [`lib/main.dart`](lib/main.dart) and configure the `baseUrl` in the repository injection block:
+   ``` dart
+   customerRepository = RestCustomerRepository(
+     CustomerApiService(baseUrl: 'http://<YOUR-IP-ADDRESS>:3000/api/customers'),
+   );
+   ```
+
+### 3. Install Dependencies
+Run the following command in the root folder of the Flutter project:
 ```bash
 flutter pub get
 ```
 
-### **3. Running the App**
-To launch on a connected device/emulator:
+### 4. Run the Application
+Start the app on an emulator or a physical test device connected to the same Wi-Fi network:
 ```bash
 flutter run
 ```
 
 ---
 
-## 💡 How to Test the App (2 Options)
+## 💡 How to Test the App (Data Options)
 
-This app contains a **graceful Firebase failure fallback system** that ensures the app runs perfectly under any developer configuration:
+The repository pattern allows swapping the data source easily. By default, it is configured to use the REST API:
 
-### **Option A: Local Demo Mode (Recommended - No Setup Needed)**
-To test all database and login operations immediately without configuring Firebase accounts or billing:
-1. Ensure there is **no** `google-services.json` file inside the `android/app/` folder (or rename it to `google-services.json.bak`).
-2. Run/Restart the app.
-3. The app will display an orange **"Local Demo Mode"** badge at the top right.
-4. **Log In Credentials**:
-   - **Mobile Number**: `9999999999`
-   - **Verification OTP**: `123456`
-5. *Note*: In this mode, both the login session and all customer CRUD operations (Add, View, Edit, Search, and Delete) run locally and persist on your device.
+### **Option A: REST API Backend Mode (Default & Active)**
+- All customer operations (List, Add, Update, Search, and Delete) call the Next.js REST API.
+- Customer profiles are persisted to MongoDB Atlas.
+- **Login Credentials**:
+  - **Mobile Number**: `9999999999`
+  - **Verification OTP**: `123456` (Uses Firebase test authentication credentials).
 
-### **Option B: Real Firebase Mode**
-To run with your live Firebase instance:
-1. Place your `google-services.json` in `android/app/` and `GoogleService-Info.plist` in `ios/Runner/`.
-2. Enable **Phone Authentication** and **Firestore Database** in the Firebase Console.
-3. Add your debug **SHA-256** and **SHA-1** key fingerprints to your Firebase project settings.
-4. Allow **India (+91)** (or your region) under **Authentication -> Settings -> SMS region policy**.
-5. *Note*: You can register test numbers in the Console (Authentication -> Users -> Add test phone number) to test specific mobile numbers with custom mock OTP codes without consuming SMS pricing quotas.
+### **Option B: Local SharedPreferences Fallback**
+- To switch to fully local mode, update `lib/main.dart` to instantiate `LocalCustomerRepository()` instead of `RestCustomerRepository()`. 
+- Data is saved directly on the client device inside `SharedPreferences` (perfect for offline testing).
+
+### **Option C: Firebase Firestore Mode**
+- The original Firebase integration can be restored by instantiating `FirestoreCustomerRepository()` in `lib/main.dart`.
+- Requires your own `google-services.json` inside `android/app/` with Firestore enabled.
 
 ---
 
 ## ✨ Features Checklist
-- [x] **OTP Verification**: Auto-focus pin inputs for OTP validation.
-- [x] **Customer Directory**: Search customers locally by name with zero-delay indexing.
-- [x] **Real-time Synchronization**: Pull-to-refresh controllers and live database streams.
-- [x] **Interactive CRUD**: Add, Edit, View Details, and Swipe-to-delete with confirmation alerts.
+- [x] **Next.js REST API Client**: CRUD endpoints integration via the `http` package.
+- [x] **Responsive Dashboards**: Adapts to mobile, tablet, and web viewports, using constraints and dynamic row-grid alignments.
+- [x] **Master-Detail Layout**: Dual-pane master-detail list configuration for larger screens (>= 720 dp width).
+- [x] **OTP Verification UI**: Verification fields with automatic autofocus for login inputs.
+- [x] **Real-time Synchronization**: Pull-to-refresh controllers, detailed state feedback, and instant search.
+- [x] **Comprehensive Error Handling**: Dynamic error SnackBars displaying exact API/network exceptions in Red.
 - [x] **Universal Dark Mode**: Dynamically switches and caches theme states.
-- [x] **Robust Widget Testing**: Completed widget tests verify compile integrity.
 
-## Demo Credentials
-
-For evaluation purposes:
-
-Mobile Number: 9999999999
-
-OTP: 123456
-
-Firebase Test Phone Authentication has been configured using Firebase Test Numbers.
-
-
-## Assignment Requirements Covered
-
-- Firebase Phone Authentication
-- OTP Verification
-- Dashboard with Customer Count
-- Add Customer
-- View Customer List
-- Search Customer
-- Customer Details
-- Update Customer
-- Delete Customer
-- BLoC State Management
-- Firebase Firestore Integration
-- Dark Mode
-
-## APK Download
-
-APK file is included in the submission package.
-
-
-
+---
 
 ## Screenshots
 
@@ -138,15 +112,17 @@ APK file is included in the submission package.
 
 ### Dashboard
 ![img_1.png](img_1.png)
-### Customer List
+
+### Customer Directory (Master-Detail Pane)
 ![img_2.png](img_2.png)
-### Add Customer
+
+### Add/Edit Customer form
 ![img_3.png](img_3.png)
+
+---
 
 ## Author
 
-Anjali Agarwal
-
-Flutter Developer
-
-Assignment Submission for GYBL Flutter & Firebase Developer Internship
+Anjali Agarwal  
+Flutter Developer  
+*Assignment Submission for GYBL Flutter & Firebase Developer Internship*
